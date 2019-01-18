@@ -1,0 +1,15 @@
+{
+    "name": "nodejs-msgraph-utils",
+    "version": "1.0.0",
+    "description": "A node.js library with usefull utilities to interact efficiently with the Microsoft Graph APIs",
+    "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/RapidCircle/nodejs-msgraph-utils.git"
+    },
+    "author": "Hans van den Akker",
+    "license": "MIT",
+    "dependencies": {
+        "lodash": "^4.17.11"
+    }
+}

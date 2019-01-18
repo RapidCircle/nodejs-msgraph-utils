@@ -1,4 +1,4 @@
-const supportedMetrics = require('nodejs-msgraph-utils');
+const supportedMetrics = require('nodejs-msgraph-utils/lookups/supportedMetrics.js');
 const _ = require('lodash');
 
 let someResource = retrieveResourceForSomePurpose();

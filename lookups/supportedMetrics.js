@@ -1,7 +1,7 @@
 /** @file supportedMetrics.js
- *  @brief reference file for supported metrics on azure resource types in Azure Metric API.
+ *  @brief reference file for supported resources with the Azure Metric API.
  *
- *  This contains the supported metrics when consuming the Azure metric APIs
+ *  This contains the resource types that have metrics supported when consuming the Azure metric APIs
  *  Proactively checking if a resource has metrics supported can optimize performance
  *  when working with large scale Azure environments.
  *

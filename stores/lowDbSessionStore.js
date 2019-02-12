@@ -13,6 +13,7 @@ const path = require('path');
 const util = require('util');
 const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
+const debug = require('../utils/logger.js')('lowdbSessionStore');
 
 // "Constants"
 const ONE_DAY = 86400000;
@@ -138,13 +139,13 @@ module.exports = function (connect) {
         let existingDoc = _this.db.get(`sessions.${sessionId}`).value();
         if (existingDoc) {
             // If the existing record does not have an expiration and/or has not yet expired, return it
-            console.log(new Date(), existingDoc.expiresAt);
-            console.log(new Date() < new Date(existingDoc.expiresAt));
             if (existingDoc.session && !existingDoc.expiresAt || new Date() < new Date(existingDoc.expiresAt)) {
+                debug.verbose(`Using non expired access Token for session ${existingDoc.session}.`);
                 return callback(null, existingDoc.session);
             }
             // Otherwise it is an expired session, so destroy it!
             else {
+                debug.info(`access Token expired for session ${existingDoc.session}`);
                 return _this.destroy(
                     sessionId,
                     function (destroyErr) {

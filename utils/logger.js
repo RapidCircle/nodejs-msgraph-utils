@@ -1,16 +1,13 @@
 /**
- * A session store implementation for Connect & Express backed by an LowDB
- * datastore (either in-memory or file-persisted).
+ * A simple logger that leverages 'debug' to provide multiple levels of logging
  *
- * For implementation requirements for Express 4.x and above, see:
- *   https://github.com/expressjs/session#session-store-implementation
  */
 
  module.exports = function(contextName) {
      return {
-         info: require('debug')(`${contextName}:info`),
-         warning: require('debug')(`${contextName}:warning`),
-         error: require('debug')(`${contextName}:error`),
-         verbose: require('debug')(`${contextName}:verbose`)
+         info: require('debug')(`info:${contextName}`),
+         warning: require('debug')(`warning:${contextName}`),
+         error: require('debug')(`error:${contextName}`),
+         verbose: require('debug')(`verbose:${contextName}`)
      }
  }

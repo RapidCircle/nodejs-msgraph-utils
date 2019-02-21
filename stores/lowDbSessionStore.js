@@ -140,7 +140,7 @@ module.exports = function (connect) {
         if (existingDoc) {
             // If the existing record does not have an expiration and/or has not yet expired, return it
             if (existingDoc.session && !existingDoc.expiresAt || new Date() < new Date(existingDoc.expiresAt)) {
-                debug.verbose(`Using non expired access Token for session ${existingDoc.session}.`);
+                debug.verbose(`Using non expired access Token for session ${sessionId}.`);
                 return callback(null, existingDoc.session);
             }
             // Otherwise it is an expired session, so destroy it!

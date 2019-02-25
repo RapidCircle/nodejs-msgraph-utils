@@ -1,6 +1,6 @@
 {
     "name": "nodejs-msgraph-utils",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "A node.js library with usefull utilities to interact efficiently with the Microsoft Graph APIs",
     "private": false,
     "repository": {

@@ -24,6 +24,7 @@ util.inherits(AzureClientCertStrategy, Strategy);
 
 AzureClientCertStrategy.prototype.authenticate = function (req, options) {
     var that = this;
+    var clientCert;
 
     try {
         const header = req.get('X-ARR-ClientCert');
@@ -37,55 +38,59 @@ AzureClientCertStrategy.prototype.authenticate = function (req, options) {
             if (!req.socket.authorized) {
                 that.fail();
             } else {
-                var clientCert = req.socket.getPeerCertificate();
-
-                // The cert must exist and be non-empty
-                if (!clientCert || Object.getOwnPropertyNames(clientCert).length === 0) {
-                    that.fail();
-                } else {
-
-                    var verified = function verified(err, user) {
-                        if (err) { return that.error(err); }
-                        if (!user) { return that.fail(); }
-                        that.success(user);
-                    };
-
-                    if (this._passReqToCallback) {
-                        this._verify(req, clientCert, verified);
-                    } else {
-                        this._verify(clientCert, verified);
-                    }
-                }
+                clientCert = req.socket.getPeerCertificate();
             }
         }
         else {
             debug.verbose('Client certificate validation throught Azure network layer.');
+            if (!process.env.AZ_VALIDATE_ISSUER_THUMBPRINT) throw new Error("ISSUER_THUMBPRINT_NOTSET");
             // Convert from PEM to pki.CERT
             const pem = `-----BEGIN CERTIFICATE-----${header}-----END CERTIFICATE-----`;
-            const incomingCert = pki.certificateFromPem(pem);
+            clientCert = pki.certificateFromPem(pem);
 
             // Validate the fingerprint / thumbprint of the certificate (use your own certificates' thumbprint)
-            const fingerPrint = md.sha1.create().update(asn1.toDer(pki.certificateToAsn1(incomingCert)).getBytes()).digest().toHex();
-            if (fingerPrint.toLowerCase() !== '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12') throw new Error('UNAUTHORIZED');
-
+            if (process.env.AZ_VALIDATE_CERTIFICATE_THUMBPRINT) {
+                const fingerPrint = md.sha1.create().update(asn1.toDer(pki.certificateToAsn1(clientCert)).getBytes()).digest().toHex();
+                if (fingerPrint.toLowerCase() !== process.env.AZ_VALIDATE_CERTIFICATE_THUMBPRINT) throw new Error('UNAUTHORIZED');
+            }
             // Validate time validity
             const currentDate = new Date();
-            if (currentDate < incomingCert.validity.notBefore || currentDate > incomingCert.validity.notAfter) throw new Error('UNAUTHORIZED');
+            if (currentDate < clientCert.validity.notBefore || currentDate > clientCert.validity.notAfter) throw new Error('UNAUTHORIZED');
 
             // Validate Issuer (use your own issuers' hash | alternative: compare it field by field like in the Azure documentation)
-            if (incomingCert.issuer.hash.toLowerCase() !== '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12') throw new Error('UNAUTHORIZED');
-
-            // Validate Subject (use your own subjects' hash | alternative: compare it field by field like in the Azure documentation)
-            if (incomingCert.subject.hash.toLowerCase() !== '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12') throw new Error('UNAUTHORIZED');
-
-            next();
+            process.env.AZ_VALIDATE_ISSUER_THUMBPRINT
+            if (clientCert.issuer.hash.toLowerCase() !== process.env.AZ_VALIDATE_ISSUER_THUMBPRINT) throw new Error('UNAUTHORIZED');
         }
     }
     catch (e) {
         if (e instanceof Error && e.message === 'UNAUTHORIZED') {
+            that.fail();
             res.status(401).send();
         } else {
+            debug.error('Error during Client Certificate authentication.', e);
             next(e);
+        }
+    }
+
+    // The cert must exist and be non-empty
+    if (!clientCert || Object.getOwnPropertyNames(clientCert).length === 0) {
+        that.fail();
+    } else {
+
+        var verified = function verified(err, user) {
+            if (err) {
+                return that.error(err);
+            }
+            if (!user) {
+                return that.fail();
+            }
+            that.success(user);
+        };
+
+        if (this._passReqToCallback) {
+            this._verify(req, clientCert, verified);
+        } else {
+            this._verify(clientCert, verified);
         }
     }
 };

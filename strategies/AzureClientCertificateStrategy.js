@@ -58,7 +58,6 @@ AzureClientCertStrategy.prototype.authenticate = function (req, options) {
             if (currentDate < clientCert.validity.notBefore || currentDate > clientCert.validity.notAfter) throw new Error('UNAUTHORIZED');
 
             // Validate Issuer (use your own issuers' hash | alternative: compare it field by field like in the Azure documentation)
-            process.env.AZ_VALIDATE_ISSUER_THUMBPRINT
             if (clientCert.issuer.hash.toLowerCase() !== process.env.AZ_VALIDATE_ISSUER_THUMBPRINT) throw new Error('UNAUTHORIZED');
         }
     }
